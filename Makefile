@@ -78,12 +78,13 @@ pull:
 
 
 #-------------------------------------------------------------------------------
-.PHONY: docker-run
-docker-run:
+.PHONY: run
+run:
 	docker run \
 		-it --rm \
-		--name ${DOCKER_IMAGE_NAME} \
 		-e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
 		-e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
 		-v ${PWD}/workdir/:/workdir \
+		-e DOCKER_USER_ID=$(shell id -u) \
+	  -e DOCKER_GROUP_ID=$(shell id -g) \
 		${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
