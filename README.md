@@ -1,5 +1,5 @@
 
-# EKS manager
+# k8S toolset
 
 A docker image that contains the tools required to interact with and EKS cluster.
 

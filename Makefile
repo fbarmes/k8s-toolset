@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 # Docker variables
 #-------------------------------------------------------------------------------
-DOCKER_IMAGE_NAME=eks-manager
+DOCKER_IMAGE_NAME=k8s-toolset
 DOCKER_IMAGE_VERSION=$(shell cat VERSION)
 
 DOCKER_TAGNAME_VERSION=${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
@@ -82,6 +82,7 @@ pull:
 run:
 	docker run \
 		-it --rm \
+		--name "eks-manager" \
 		-e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
 		-e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
 		-v ${PWD}/workdir/:/workdir \

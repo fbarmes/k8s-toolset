@@ -1,4 +1,4 @@
-ARG UBUNTU_VERSION=20.04
+ARG UBUNTU_VERSION=22.04
 FROM ubuntu:${UBUNTU_VERSION}
 
 
@@ -11,7 +11,13 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
 
 
-RUN \
+ENV \
+  KUBECTL_VERSION=v1.25.3 \
+  EKSCTL_VERSION=v0.117.0 \
+  HELM_VERSION=v3.10.1
+
+
+RUN set -eux &&\
   #
   # Update package repositories
   apt-get update &&\
@@ -26,7 +32,8 @@ RUN \
     gettext \
     bash-completion \
     moreutils \
-    make &&\
+    make \
+    wget &&\
   #
   # AWS cli (v2)
   cd /tmp &&\
@@ -36,19 +43,19 @@ RUN \
   rm -rf aws awscliv2.zip &&\
   #
   # kubectl
-  curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl &&\
+  echo $KUBECTL_VERSION &&\
+  curl --location -o kubectl https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl &&\
   chmod 755 ./kubectl &&\
   mv kubectl /usr/local/bin &&\
   #
   # eksctl
-  curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp &&\
+  curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/$EKSCTL_VERSION/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp &&\
   mv /tmp/eksctl /usr/local/bin &&\
   #
   # helm
-  apt-get install -y wget &&\
-  wget https://get.helm.sh/helm-v3.7.0-linux-amd64.tar.gz &&\
-  tar -zxvf helm-v3.7.0-linux-amd64.tar.gz &&\
-  rm helm-v3.7.0-linux-amd64.tar.gz &&\
+  wget https://get.helm.sh/helm-$HELM_VERSION-linux-amd64.tar.gz &&\
+  tar -zxvf helm-$HELM_VERSION-linux-amd64.tar.gz &&\
+  rm helm-$HELM_VERSION-linux-amd64.tar.gz &&\
   mv linux-amd64/helm /usr/local/bin/helm &&\
   #
   # clean apt
@@ -67,7 +74,7 @@ RUN \
   echo "== aws cli version"  &&\
   aws --version &&\
   echo "== kubectl version"  &&\
-  kubectl version --short --client &&\
+  kubectl version --output=yaml --client &&\
   echo "== eksctl version"  &&\
   eksctl version &&\
   echo "== help version"  &&\
@@ -92,29 +99,20 @@ RUN \
   curl --silent --show-error --location --output /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" &&\
   chmod +x /usr/local/bin/gosu &&\
   true
-  # && export GNUPGHOME="$(mktemp -d)" \
-  # && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-  # && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
-  # && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
-  # && chmod +x /usr/local/bin/gosu \
-  # && gosu nobody true
 
 #-------------------------------------------------------------------------------
 # Tools installation
 #-------------------------------------------------------------------------------
-#--
-#ENV LBC_VERSION "v2.2.0"
-
 
 #--
-ENV AWS_ACCESS_KEY_ID ""
-ENV AWS_SECRET_ACCESS_KEY ""
-ENV AWS_DEFAULT_REGION "eu-west-1"
-
-ENV DOCKER_USER_ID=""
-ENV DOCKER_GROUP_ID=""
-ENV DOCKER_USER_NAME=""
-ENV DOCKER_GROUP_NAME=""
+ENV \
+  AWS_ACCESS_KEY_ID="" \
+  AWS_SECRET_ACCESS_KEY="" \
+  AWS_DEFAULT_REGION="eu-west-1" \
+  DOCKER_USER_ID="" \
+  DOCKER_GROUP_ID="" \
+  DOCKER_USER_NAME="" \
+  DOCKER_GROUP_NAME=""
 
 
 #-------------------------------------------------------------------------------
