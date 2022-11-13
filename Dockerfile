@@ -88,6 +88,30 @@ RUN set -eux &&\
 
 
 #-------------------------------------------------------------------------------
+# more tools
+#-------------------------------------------------------------------------------
+RUN set -eux &&\
+  #
+  # Update package repositories
+  apt-get update &&\
+  #
+  # install tools
+  apt-get install -y \
+    iputils-ping \
+    curl \
+    dnsutils \
+    iproute2 &&\
+  #
+  # cleanup apt
+  apt-get -y clean &&\
+  rm -rf /var/lib/apt/lists/* &&\
+  #
+  true
+
+
+
+
+#-------------------------------------------------------------------------------
 # gosu
 #-------------------------------------------------------------------------------
 ENV GOSU_VERSION 1.11

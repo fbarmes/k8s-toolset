@@ -72,6 +72,10 @@ function setup_user() {
 
   #-- setup home
   export HOME=/home/${DOCKER_USER_NAME}
+
+  #-- give rights to home
+  chown ${DOCKER_USER_ID}:${DOCKER_GROUP_ID} ${HOME}
+
 }
 
 
@@ -96,6 +100,8 @@ function main() {
     echov "-> run as root"
     exec $@
   fi
+
+  cd ${HOME}
 }
 
 
