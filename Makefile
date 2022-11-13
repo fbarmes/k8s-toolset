@@ -50,8 +50,8 @@ docker-login:
 
 
 #-------------------------------------------------------------------------------
-.PHONY: docker-push-version
-docker-push-version: docker-login
+.PHONY: docker-push
+docker-push: docker-login
 	#
 	docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} ${DOCKER_TAGNAME_VERSION}
 	#
@@ -61,7 +61,7 @@ docker-push-version: docker-login
 
 #-------------------------------------------------------------------------------
 .PHONY: docker-push-latest
-docker-push-latest: docker-login
+docker-push-latest: docker-login docker-push
 	#
 	docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} ${DOCKER_TAGNAME_LATEST}
 	#
