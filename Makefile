@@ -3,6 +3,7 @@
 #-------------------------------------------------------------------------------
 # Docker variables
 #-------------------------------------------------------------------------------
+DOCKER_USERNAME=fbarmes
 DOCKER_IMAGE_NAME=k8s-toolset
 DOCKER_IMAGE_VERSION=$(shell cat VERSION)
 
@@ -15,7 +16,7 @@ DOCKER_TAGNAME_LATEST=${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:latest
 .PHONY: echo
 echo:
 	@echo "-- Image coordinates"
-	@echo DOCKER_IMAGE_NAME=[${DOCKER_IMAGE_NAME}]
+	@echo DOCKER_TAGNAME_VERSION=[${DOCKER_TAGNAME_VERSION}]
 	@echo VERSION=[${DOCKER_IMAGE_VERSION}]
 	#
 	@echo "-- Image tags"
@@ -34,9 +35,13 @@ echo:
 build:
 	#-- build image
 	docker build \
-		-t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} \
+		-t ${DOCKER_TAGNAME_VERSION} \
 		-f Dockerfile \
 		.
+
+.PHONY: tag-latest
+tag-latest:
+	docker tag ${DOCKER_TAGNAME_VERSION} ${DOCKER_TAGNAME_LATEST}
 
 #-------------------------------------------------------------------------------
 # Docker publish
@@ -52,9 +57,6 @@ docker-login:
 #-------------------------------------------------------------------------------
 .PHONY: docker-push
 docker-push: docker-login
-	#
-	docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} ${DOCKER_TAGNAME_VERSION}
-	#
 	docker push ${DOCKER_TAGNAME_VERSION}
 	#
 	docker logout
@@ -63,7 +65,7 @@ docker-push: docker-login
 .PHONY: docker-push-latest
 docker-push-latest: docker-login docker-push
 	#
-	docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION} ${DOCKER_TAGNAME_LATEST}
+	docker tag ${DOCKER_TAGNAME_VERSION} ${DOCKER_TAGNAME_LATEST}
 	#
 	docker push ${DOCKER_TAGNAME_LATEST}
 	#
@@ -74,7 +76,7 @@ docker-push-latest: docker-login docker-push
 #-------------------------------------------------------------------------------
 .PHONY: pull
 pull:
-	docker pull ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}
+	docker pull ${DOCKER_REGISTRY}${DOCKER_TAGNAME_VERSION}
 
 
 #-------------------------------------------------------------------------------
@@ -88,4 +90,4 @@ run:
 		-v ${PWD}/workdir/:/workdir \
 		-e DOCKER_USER_ID=$(shell id -u) \
 	  -e DOCKER_GROUP_ID=$(shell id -g) \
-		${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
+		${DOCKER_TAGNAME_VERSION}
