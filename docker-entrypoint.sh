@@ -77,6 +77,31 @@ function setup_user() {
   chown ${DOCKER_USER_ID}:${DOCKER_GROUP_ID} ${HOME}
 
 }
+#-------------------------------------------------------------------------------
+function setup_shell() {
+  echo "[INFO] setup shell"
+
+
+  cat <<EOF >> ${HOME}/.bashrc
+alias k=kubectl
+alias kget="kubectl get -o wide"
+complete -o default -F __start_kubectl k
+
+function k-merge-configs() {
+  old=" \$IFS"; IFS=':'; merged="\$*"; IFS=\$old
+  echo \$merged
+
+  if [[ -f \${HOME}/.kube/config ]] ; then
+    cp \${HOME}/.kube/config \${HOME}/.kube/config.bak
+  fi
+  KUBECONFIG="\$merged" kubectl config view --flatten > \${HOME}/.kube/config
+}
+
+
+EOF
+
+}
+
 
 
 #-------------------------------------------------------------------------------
@@ -94,14 +119,22 @@ function main() {
     # run CMD as gosu user
     echov "-> run as user"
     setup_user
+
+    cd ${HOME}
+    setup_shell
+
     exec /usr/local/bin/gosu ${DOCKER_USER_NAME} $@
   else
     # run CMD as root
     echov "-> run as root"
+
+    cd ${HOME}
+    setup_shell
+
     exec $@
   fi
 
-  cd ${HOME}
+
 }
 
 
