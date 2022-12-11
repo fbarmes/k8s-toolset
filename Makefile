@@ -56,7 +56,7 @@ docker-login:
 
 #-------------------------------------------------------------------------------
 .PHONY: docker-push
-docker-push: docker-login
+docker-push:
 	docker push ${DOCKER_TAGNAME_VERSION}
 	#
 	docker logout
