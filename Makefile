@@ -59,17 +59,15 @@ docker-login:
 docker-push:
 	docker push ${DOCKER_TAGNAME_VERSION}
 	#
-	docker logout
 
 #-------------------------------------------------------------------------------
 .PHONY: docker-push-latest
-docker-push-latest: docker-login docker-push
+docker-push-latest: docker-push
 	#
 	docker tag ${DOCKER_TAGNAME_VERSION} ${DOCKER_TAGNAME_LATEST}
 	#
 	docker push ${DOCKER_TAGNAME_LATEST}
 	#
-	docker logout
 
 #-------------------------------------------------------------------------------
 # pull
