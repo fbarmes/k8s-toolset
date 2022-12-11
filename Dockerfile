@@ -14,9 +14,12 @@ ENV TZ=Europe/Paris
 ENV \
   KUBECTL_VERSION=v1.25.3 \
   EKSCTL_VERSION=v0.117.0 \
-  HELM_VERSION=v3.10.1
+  HELM_VERSION=v3.10.1 \
+  RKE_VERSION=v1.4.1
 
-
+#-------------------------------------------------------------------------------
+# System packages
+#-------------------------------------------------------------------------------
 RUN set -eux &&\
   #
   # Update package repositories
@@ -33,40 +36,99 @@ RUN set -eux &&\
     bash-completion \
     moreutils \
     make \
-    wget &&\
+    wget \
+    iputils-ping \
+    dnsutils \
+    iproute2 &&\
   #
-  # AWS cli (v2)
+  mkdir /etc/bash_completion.d/ &&\
+  #
+  # clean apt
+  apt-get -y clean &&\
+  rm -rf /var/lib/apt/lists/* &&\
+  #
+  true
+
+
+#-------------------------------------------------------------------------------
+# AWS
+#-------------------------------------------------------------------------------
+RUN set -eux &&\
+  #
+  # install AWS cli (v2)
   cd /tmp &&\
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" &&\
   unzip awscliv2.zip &&\
   ./aws/install &&\
   rm -rf aws awscliv2.zip &&\
   #
-  # kubectl
+  true
+
+RUN set -eux &&\
+  #
+  # install eksctl
+  curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/$EKSCTL_VERSION/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp &&\
+  mv /tmp/eksctl /usr/local/bin &&\
+  #
+  # bash completion
+  eksctl completion bash  >  /etc/bash_completion.d/eksctl_completion &&\
+  #
+  true
+
+
+#-------------------------------------------------------------------------------
+# kubectl and helm
+#-------------------------------------------------------------------------------
+
+RUN set -eux &&\
+  #
+  # install kubectl
+  #
   echo $KUBECTL_VERSION &&\
   curl --location -o kubectl https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl &&\
   chmod 755 ./kubectl &&\
   mv kubectl /usr/local/bin &&\
   #
-  # eksctl
-  curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/$EKSCTL_VERSION/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp &&\
-  mv /tmp/eksctl /usr/local/bin &&\
+  # bash completion
+  kubectl completion bash >  /etc/bash_completion.d/kubectl_completion &&\
   #
-  # helm
+  true
+
+
+RUN set -eux &&\
+  #
+  # install helm
+  #
   wget https://get.helm.sh/helm-$HELM_VERSION-linux-amd64.tar.gz &&\
   tar -zxvf helm-$HELM_VERSION-linux-amd64.tar.gz &&\
   rm helm-$HELM_VERSION-linux-amd64.tar.gz &&\
   mv linux-amd64/helm /usr/local/bin/helm &&\
   #
-  # clean apt
-  apt-get -y clean &&\
-  rm -rf /var/lib/apt/lists/* &&\
+  # bash completion
+  helm completion bash    > /etc/bash_completion.d/helm_completion &&\
+  #
+  true
+
+
+#-------------------------------------------------------------------------------
+# rke
+# https://github.com/rancher/rke/releases/download/v1.4.1/rke_linux-amd64
+#-------------------------------------------------------------------------------
+RUN set -eux &&\
+  #
+  # install rke
+  #
+  curl --location -o /usr/local/bin/rke https://github.com/rancher/rke/releases/download/$RKE_VERSION/rke_linux-amd64 &&\
+  chmod 755 /usr/local/bin/rke &&\
+  #
+  true
+
+#-------------------------------------------------------------------------------
+# postinstal setup
+#-------------------------------------------------------------------------------
+RUN set -eux &&\
   #
   # add bash completion for the instaled tools
-  mkdir /etc/bash_completion.d/ &&\
-  kubectl completion bash >  /etc/bash_completion.d/kubectl_completion &&\
-  eksctl completion bash  >  /etc/bash_completion.d/eksctl_completion &&\
-  helm completion bash    > /etc/bash_completion.d/helm_completion &&\
   echo "source /etc/profile.d/bash_completion.sh" >> ~/.bashrc &&\
   echo "source /etc/profile.d/bash_completion.sh" >> /etc/skel/.bashrc &&\
   #
@@ -79,37 +141,10 @@ RUN set -eux &&\
   eksctl version &&\
   echo "== help version"  &&\
   helm version &&\
-  #
-  # cleanup apt
-  apt-get -y clean &&\
-  rm -rf /var/lib/apt/lists/* &&\
+  echo "== rke version" &&\
+  rke --version &&\
   #
   true
-
-
-#-------------------------------------------------------------------------------
-# more tools
-#-------------------------------------------------------------------------------
-RUN set -eux &&\
-  #
-  # Update package repositories
-  apt-get update &&\
-  #
-  # install tools
-  apt-get install -y \
-    iputils-ping \
-    curl \
-    dnsutils \
-    iproute2 &&\
-  #
-  # cleanup apt
-  apt-get -y clean &&\
-  rm -rf /var/lib/apt/lists/* &&\
-  #
-  true
-
-
-
 
 #-------------------------------------------------------------------------------
 # gosu
@@ -123,10 +158,6 @@ RUN \
   curl --silent --show-error --location --output /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" &&\
   chmod +x /usr/local/bin/gosu &&\
   true
-
-#-------------------------------------------------------------------------------
-# Tools installation
-#-------------------------------------------------------------------------------
 
 #--
 ENV \
