@@ -31,16 +31,16 @@ echo:
 #-------------------------------------------------------------------------------
 # Build
 #-------------------------------------------------------------------------------
-.PHONY: build
-build:
+.PHONY: docker-build
+docker-build:
 	#-- build image
 	docker build \
 		-t ${DOCKER_TAGNAME_VERSION} \
 		-f Dockerfile \
 		.
 
-.PHONY: tag-latest
-tag-latest:
+.PHONY: docker-tag-latest
+docker-tag-latest:
 	docker tag ${DOCKER_TAGNAME_VERSION} ${DOCKER_TAGNAME_LATEST}
 
 #-------------------------------------------------------------------------------
@@ -72,20 +72,29 @@ docker-push-latest: docker-push
 #-------------------------------------------------------------------------------
 # pull
 #-------------------------------------------------------------------------------
-.PHONY: pull
+.PHONY: docker-pull
 pull:
 	docker pull ${DOCKER_REGISTRY}${DOCKER_TAGNAME_VERSION}
 
 
 #-------------------------------------------------------------------------------
-.PHONY: run
-run:
+.PHONY: docker-run
+docker-run:
 	docker run \
 		-it --rm \
-		--name "k8s-toolset" \
 		-e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
 		-e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
 		-v ${PWD}/workdir/:/workdir \
 		-e DOCKER_USER_ID=$(shell id -u) \
 	  -e DOCKER_GROUP_ID=$(shell id -g) \
+		${DOCKER_TAGNAME_VERSION}
+
+#-------------------------------------------------------------------------------
+.PHONY: docker-run-root
+docker-run-root:
+	docker run \
+		-it --rm \
+		-e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
+		-e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
+		-v ${PWD}/workdir/:/workdir \
 		${DOCKER_TAGNAME_VERSION}
