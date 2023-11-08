@@ -12,10 +12,10 @@ ENV TZ=Europe/Paris
 
 
 ENV \
-  KUBECTL_VERSION=v1.25.3 \
-  EKSCTL_VERSION=v0.117.0 \
-  HELM_VERSION=v3.10.1 \
-  RKE_VERSION=v1.4.1
+  KUBECTL_VERSION=v1.27.3 \
+  EKSCTL_VERSION=v0.149.0 \
+  HELM_VERSION=v3.12.1 \
+  RKE_VERSION=v1.4.7
 
 #-------------------------------------------------------------------------------
 # System packages
@@ -124,6 +124,32 @@ RUN set -eux &&\
   true
 
 #-------------------------------------------------------------------------------
+# Terraform
+#-------------------------------------------------------------------------------
+ENV TERRAFORM_VERSION=1.5.3-1
+
+RUN set -eux &&\
+  apt-get update &&\
+  apt-get install -y \
+    gpg \
+    lsb-release &&\
+  #
+  # terraform
+  curl -s -o /tmp/hashicorp.gpg https://apt.releases.hashicorp.com/gpg  &&\
+  gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg /tmp/hashicorp.gpg  &&\
+  echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list &&\
+  apt-get update &&\
+  apt-get install -y \
+    terraform=${TERRAFORM_VERSION} &&\
+  #
+  # clean apt
+  apt-get -y clean &&\
+  rm -rf /var/lib/apt/lists/* &&\
+  #
+  true
+
+
+#-------------------------------------------------------------------------------
 # postinstal setup
 #-------------------------------------------------------------------------------
 RUN set -eux &&\
@@ -143,6 +169,8 @@ RUN set -eux &&\
   helm version &&\
   echo "== rke version" &&\
   rke --version &&\
+  echo "== terraform version" &&\
+  terraform -version &&\
   #
   true
 
