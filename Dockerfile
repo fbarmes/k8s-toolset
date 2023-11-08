@@ -14,7 +14,7 @@ ENV TZ=Europe/Paris
 ENV \
   KUBECTL_VERSION=v1.27.3 \
   EKSCTL_VERSION=v0.149.0 \
-  HELM_VERSION=v3.12.1 \
+  HELM_VERSION=v3.13.1 \
   RKE_VERSION=v1.4.7
 
 #-------------------------------------------------------------------------------
@@ -75,7 +75,6 @@ RUN set -eux &&\
   #
   true
 
-
 #-------------------------------------------------------------------------------
 # kubectl and helm
 #-------------------------------------------------------------------------------
@@ -126,7 +125,7 @@ RUN set -eux &&\
 #-------------------------------------------------------------------------------
 # Terraform
 #-------------------------------------------------------------------------------
-ENV TERRAFORM_VERSION=1.5.3-1
+ENV TERRAFORM_VERSION=1.6.3-1
 
 RUN set -eux &&\
   apt-get update &&\
@@ -148,6 +147,33 @@ RUN set -eux &&\
   #
   true
 
+#-------------------------------------------------------------------------------
+# Python, Ansible and requirements
+#-------------------------------------------------------------------------------
+
+COPY ansible-python-requirements.txt /tmp/ansible-python-requirements.txt
+
+RUN set -eux &&\
+  #
+  # update apt
+  apt-get update &&\ 
+  #
+  # python and pip
+  apt-get install -y \
+    python3 \
+    python3-pip &&\
+  #
+  # upgrade pip
+  pip install --upgrade pip &&\
+  #
+  # Ansible and python requirements
+  pip install -r /tmp/ansible-python-requirements.txt &&\
+  #
+  # clean apt
+  apt-get -y clean &&\
+  rm -rf /var/lib/apt/lists/* &&\
+  #
+  true
 
 #-------------------------------------------------------------------------------
 # postinstal setup
@@ -171,6 +197,23 @@ RUN set -eux &&\
   rke --version &&\
   echo "== terraform version" &&\
   terraform -version &&\
+  #
+  true
+
+#-------------------------------------------------------------------------------
+# sudo
+#-------------------------------------------------------------------------------
+RUN set -eux &&\
+  #
+  # update apt
+  apt-get update &&\ 
+  #
+  # python and pip
+  apt-get install -y \
+    sudo &&\
+  # clean apt
+  apt-get -y clean &&\
+  rm -rf /var/lib/apt/lists/* &&\
   #
   true
 

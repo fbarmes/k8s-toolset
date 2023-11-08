@@ -76,6 +76,10 @@ function setup_user() {
   #-- give rights to home
   chown ${DOCKER_USER_ID}:${DOCKER_GROUP_ID} ${HOME}
 
+  #-- make user sudoer passwordless
+  usermod -aG sudo ${DOCKER_USER_NAME}
+  echo "${DOCKER_USER_NAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/sudoer_passwordless
+
 }
 #-------------------------------------------------------------------------------
 function setup_shell() {
