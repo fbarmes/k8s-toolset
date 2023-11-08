@@ -37,6 +37,7 @@ docker-build:
 	docker build \
 		-t ${DOCKER_TAGNAME_VERSION} \
 		-f Dockerfile \
+		--progress plain \
 		.
 
 .PHONY: docker-tag-latest
